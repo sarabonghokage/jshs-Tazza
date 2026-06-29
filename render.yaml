@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: hallasan-jakdu-leaderboard
+    runtime: docker
+    repo: # (선택) GitHub 저장소 URL. 대시보드에서 연결해도 됨.
+    rootDir: server
+    plan: free
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: DATA_DIR
+        value: /var/data
+    # 무료(free) 플랜은 영구 디스크를 지원하지 않아 재배포 시 DB 가 초기화됩니다.
+    # 랭킹을 영구 보존하려면 아래 disk 블록의 주석을 풀고 유료 플랜으로 올리세요.
+    # disk:
+    #   name: data
+    #   mountPath: /var/data
+    #   sizeGB: 1

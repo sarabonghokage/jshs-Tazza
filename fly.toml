@@ -1,0 +1,28 @@
+# Fly.io 배포 설정. 배포 전 'fly launch --no-deploy' 로 app 이름을 정하거나
+# 아래 app 값을 원하는 고유 이름으로 바꾸세요.
+app = "hallasan-jakdu-leaderboard"
+primary_region = "nrt"  # 도쿄 (한국에서 가장 가까움)
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  DATA_DIR = "/data"
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[http_service.checks]]
+  path = "/api/health"
+  interval = "30s"
+  timeout = "5s"
+
+# 랭킹 DB 영구 보존용 볼륨(권장). 먼저 'fly volumes create data --size 1' 실행.
+[[mounts]]
+  source = "data"
+  destination = "/data"
