@@ -8,10 +8,14 @@ services:
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
-      - key: DATA_DIR
-        value: /var/data
-    # 무료(free) 플랜은 영구 디스크를 지원하지 않아 재배포 시 DB 가 초기화됩니다.
-    # 랭킹을 영구 보존하려면 아래 disk 블록의 주석을 풀고 유료 플랜으로 올리세요.
+      # 영구 보존: Neon 등 외부 Postgres 연결 문자열을 넣으면 셧다운/재배포 후
+      # 에도 랭킹이 남는다. Render 대시보드 > Environment 에서 직접 설정해도 됨.
+      # 예) postgresql://USER:PASSWORD@HOST/DB?sslmode=require
+      - key: DATABASE_URL
+        sync: false
+    # 무료(free) 플랜은 영구 디스크가 없어 SQLite 파일은 재배포/셧다운 시 초기화
+    # 됩니다. 위 DATABASE_URL(외부 Postgres)을 쓰면 영구 보존됩니다.
+    # (유료 플랜 + 디스크를 쓰려면 아래 주석을 푸세요.)
     # disk:
     #   name: data
     #   mountPath: /var/data
