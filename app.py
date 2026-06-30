@@ -19,6 +19,7 @@ from typing import Any, Literal
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 # 클라우드 호스팅(Render/Railway/Fly 등)은 PORT 환경변수를 주입한다.
@@ -26,6 +27,8 @@ from pydantic import BaseModel, Field
 _DEFAULT_DIR = Path(__file__).resolve().parent
 DATA_DIR = Path(os.environ.get("DATA_DIR", str(_DEFAULT_DIR)))
 DB_PATH = Path(os.environ.get("DB_PATH", str(DATA_DIR / "leaderboard.db")))
+# 게임 웹 빌드(정적 파일)를 같은 서버에서 서빙한다. (build/web 을 여기로 복사)
+WEB_DIR = Path(os.environ.get("WEB_DIR", str(_DEFAULT_DIR / "web")))
 PORT = int(os.environ.get("PORT", "8787"))
 MAX_NAME_LEN = 16
 MAX_RUNS_PER_REQUEST = 20
@@ -174,9 +177,15 @@ def leaderboard(
   return {"sort": sort, "entries": out}
 
 
-@app.get("/")
-def root() -> dict[str, str]:
-  return {"service": "hallasan-jakdu-leaderboard", "health": "/api/health"}
+# 게임 정적 파일을 루트에 마운트한다. API 라우트(/api/*)는 위에서 먼저 정의되어
+# 우선 매칭되고, 그 외 경로(/, /card.apk, /favicon.png 등)는 정적 파일로 서빙된다.
+# web 폴더가 없으면(서버만 배포한 경우) 안내용 JSON 루트를 제공한다.
+if WEB_DIR.is_dir():
+  app.mount("/", StaticFiles(directory=str(WEB_DIR), html=True), name="web")
+else:
+  @app.get("/")
+  def root() -> dict[str, str]:
+    return {"service": "hallasan-jakdu-leaderboard", "health": "/api/health"}
 
 
 if __name__ == "__main__":
